@@ -3,7 +3,7 @@
 <div align="center">
   <p>
     <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank">
-      <img src="https://img.shields.io/badge/🚀_在线体验-点击访问-6366F1?style=flat" alt="在线体验">
+      <img src="https://img.shields.io/badge/🚀_在线体验-点击访问-3B82F6?style=plastic&labelColor=38BDF8&color=3B82F6" alt="在线体验">
     </a>
   </p>
 </div>
