@@ -1,15 +1,11 @@
 # 编译原理实验平台 (Compilation Web)
 
 <div align="center">
-  <img src="https://api.iconify.design/fluent-emoji:laptop.svg" width="100" height="100" alt="Logo" style="margin-bottom: 20px;">
+  <img src="./logo.svg" width="100" height="100" alt="Logo" style="margin-bottom: 20px;">
   <br>
-  <img src="https://api.iconify.design/vscode-icons:file-type-html.svg" width="40" height="40" alt="HTML5" style="margin: 0 10px;">
-  <img src="https://api.iconify.design/logos:javascript.svg" width="40" height="40" alt="JavaScript" style="margin: 0 10px;">
-  <img src="https://api.iconify.design/logos:tailwindcss-icon.svg" width="40" height="40" alt="Tailwind CSS" style="margin: 0 10px;">
-  <br><br>
   <p>
     <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank">
-      <img src="https://img.shields.io/badge/🚀_在线体验-点击访问-6366F1?style=flat&logo=vercel" alt="在线体验">
+      <strong>🚀 点击这里在线体验</strong>
     </a>
   </p>
 </div>
