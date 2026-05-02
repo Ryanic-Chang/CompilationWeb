@@ -1,16 +1,18 @@
-# 编译原理实验平台 (Compilation Web)
-
 <div align="center">
-  <img src="./logo.svg" width="100" height="100" alt="Logo" style="margin-bottom: 20px;">
-  <br>
-  <p>
-    <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank">
-      <strong>🚀 点击这里在线体验</strong>
-    </a>
-  </p>
+  <img src="./logo.svg" alt="Compilation-Web Logo" width="100" height="100" />
+  <h1>编译原理实验平台<br>(Compilation Web)</h1>
+  <p><b>Compilation Web</b> 是一套风格明亮、现代化的编译原理实验网页版平台。<br/>旨在将传统的编译原理实验（如 DFA 模拟、词法分析、LR(0) 语法分析等）通过可视化的方式在网页端直接展示，提升学习体验、交互性和对算法的理解。</p>
 </div>
 
-这是一个风格明亮、现代化的编译原理实验网页版平台，旨在将传统的编译原理实验（如 DFA 模拟、词法分析、LR(0) 语法分析等）通过可视化的方式在网页端直接展示，提升学习体验、交互性和对算法的理解。
+<p align="center">
+  <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank"><img src="https://img.shields.io/badge/🚀_在线体验-Online_Demo-3B82F6?style=flat" alt="Online Demo"></a>
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/vis--network-4B5563?style=flat" alt="vis-network">
+</p>
+
+---
 
 欢迎点点star⭐~
 
