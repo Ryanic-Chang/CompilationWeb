@@ -3,13 +3,8 @@
 <div align="center">
   <p>
     <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank">
-      <img src="https://img.shields.io/badge/🚀_在线体验-Online_Demo-indigo?style=for-the-badge&logo=vercel" alt="Online Demo">
+      <img src="https://img.shields.io/badge/🚀_在线体验-点击访问-4F46E5?style=for-the-badge" alt="在线体验">
     </a>
-  </p>
-  <p>
-    <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
-    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
   </p>
 </div>
 
