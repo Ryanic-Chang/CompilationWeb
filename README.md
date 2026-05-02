@@ -5,11 +5,7 @@
 </div>
 
 <p align="center">
-  <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank"><img src="https://img.shields.io/badge/🚀_在线体验-Online_Demo-3B82F6?style=flat" alt="Online Demo"></a>
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" alt="HTML5">
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/vis--network-4B5563?style=flat" alt="vis-network">
+  <img src="https://img.shields.io/badge/🚀_在线体验-点击访问-3B82F6?style=plastic&labelColor=38BDF8&color=3B82F6" alt="在线体验">
 </p>
 
 ---
