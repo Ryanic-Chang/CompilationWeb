@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO 与社交分享优化 (Open Graph) -->
+    <meta name="description" content="一个纯前端实现的现代化编译原理实验平台，支持 DFA 模拟、词法分析、LR(0) 语法分析等功能及动态可视化。">
+    <meta property="og:title" content="编译原理实验平台 (Compilation Web)">
+    <meta property="og:description" content="一个纯前端实现的现代化编译原理实验平台，支持 DFA 模拟、词法分析、LR(0) 语法分析等功能及动态可视化。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ryanic-chang.github.io/CompilationWeb/">
+    
+    <!-- 网页图标 (Favicon) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
+
+    <title>编译原理实验平台 | Compilation Web</title>
+    <!-- 引入 Tailwind CSS 进行现代明亮风格的样式设计 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 vis-network 库，用于绘制 DFA 图形 -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+    <!-- 侧边栏 (多级网页导航) -->
+    <aside class="w-64 bg-white shadow-xl flex flex-col h-full z-10 relative">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="text-2xl font-bold text-indigo-600 flex items-center gap-2">
+                <i class="fa-solid fa-code"></i> 编译原理
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">实验演示平台</p>
+        </div>
+        <nav class="flex-1 p-4 overflow-y-auto space-y-2">
+            <!-- 实验一：DFA -->
+            <a href="#" class="nav-item active flex items-center gap-3 p-3 rounded-lg text-indigo-700 bg-indigo-50 font-medium transition-colors" data-target="experiment-dfa">
+                <i class="fa-solid fa-project-diagram"></i> 实验一: DFA
+            </a>
+            <!-- 可扩展的其他实验 -->
+            <a href="#" class="nav-item flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors" data-target="experiment-scanner">
+                <i class="fa-solid fa-magnifying-glass"></i> 实验二: 词法分析
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors" data-target="experiment-lr0">
+                <i class="fa-solid fa-code-branch"></i> 实验三: LR(0) 分析
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 p-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors" data-target="experiment-placeholder">
+                <i class="fa-solid fa-cogs"></i> 实验四: 语义分析 (待开发)
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 h-full overflow-y-auto bg-slate-50 p-8 relative">
+        
+        <!-- DFA 实验内容 -->
+        <section id="experiment-dfa" class="page-section active max-w-7xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">实验一：DFA 模拟与可视化</h2>
+                <p class="text-slate-500 mt-2">通过输入五元组定义（或上传文件），模拟DFA的运行，验证字符串，并生成可视化的状态转移图。</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- 左侧控制面板 -->
+                <div class="lg:col-span-4 space-y-6">
+                    <!-- DFA 定义输入区 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-slate-700"><i class="fa-solid fa-pen-to-square mr-2"></i>DFA 定义</h3>
+                            <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-file-upload"></i> 上传文件
+                                <input type="file" id="dfa-file-upload" class="hidden" accept=".txt">
+                            </label>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">请填写五元组或上传文件自动填充</p>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <span class="w-24 text-sm font-semibold text-slate-600 bg-slate-100 py-1.5 px-2 rounded-l-md border border-slate-200 border-r-0">Alphabet</span>
+                                <input type="text" id="dfa-alphabet" value="a b" class="flex-1 p-1.5 px-3 border border-slate-200 rounded-r-md text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-sm font-semibold text-slate-600 bg-slate-100 py-1.5 px-2 rounded-l-md border border-slate-200 border-r-0">States</span>
+                                <input type="text" id="dfa-states" value="q0 q1 q2" class="flex-1 p-1.5 px-3 border border-slate-200 rounded-r-md text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-sm font-semibold text-slate-600 bg-slate-100 py-1.5 px-2 rounded-l-md border border-slate-200 border-r-0">Start</span>
+                                <input type="text" id="dfa-start" value="q0" class="flex-1 p-1.5 px-3 border border-slate-200 rounded-r-md text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-sm font-semibold text-slate-600 bg-slate-100 py-1.5 px-2 rounded-l-md border border-slate-200 border-r-0">Accept</span>
+                                <input type="text" id="dfa-accept" value="q2" class="flex-1 p-1.5 px-3 border border-slate-200 rounded-r-md text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono">
+                            </div>
+                            <div>
+                                <span class="block text-sm font-semibold text-slate-600 bg-slate-100 py-1.5 px-2 rounded-t-md border border-slate-200 border-b-0">Transitions <span class="font-normal text-xs text-slate-400 ml-1">(每行一条: 状态 字符 状态)</span></span>
+                                <textarea id="dfa-transitions" class="w-full h-32 p-3 bg-white border border-slate-200 rounded-b-md text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none leading-relaxed">q0 a q1&#10;q1 b q2&#10;q2 a q1</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button id="btn-parse-dfa" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-sm">
+                                解析并生成图
+                            </button>
+                        </div>
+                        <div id="dfa-status" class="mt-3 text-sm hidden"></div>
+                    </div>
+
+                    <!-- 字符串测试区 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 opacity-50 pointer-events-none transition-opacity" id="test-section">
+                        <h3 class="text-lg font-semibold text-slate-700 mb-4"><i class="fa-solid fa-vial mr-2"></i>功能测试</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- 生成字符串 -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">生成长度 <= N 的接受字符串</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="input-max-len" value="3" min="1" max="10" class="flex-1 p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <button id="btn-generate" class="bg-slate-800 hover:bg-slate-900 text-white px-4 rounded-lg text-sm font-medium transition-colors">生成</button>
+                                </div>
+                                <div id="generate-result" class="mt-2 text-xs text-slate-600 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded hidden"></div>
+                            </div>
+                            
+                            <hr class="border-slate-100">
+
+                            <!-- 测试字符串接受状态 -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">测试字符串是否被接受</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="input-test-str" placeholder="输入测试字符串" class="flex-1 p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <button id="btn-test-str" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-lg text-sm font-medium transition-colors">验证</button>
+                                </div>
+                                <div id="test-str-result" class="mt-2 text-sm hidden font-medium"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧可视化区 -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-1 flex flex-col min-h-[500px]">
+                        <h3 class="text-lg font-semibold text-slate-700 mb-4"><i class="fa-solid fa-diagram-project mr-2"></i>状态转移图 (可视化)</h3>
+                        <div id="dfa-network" class="flex-1 border border-slate-100 rounded-lg bg-slate-50 overflow-hidden relative">
+                            <!-- 图形渲染区 -->
+                            <div class="absolute inset-0 flex items-center justify-center text-slate-400" id="network-placeholder">
+                                <div class="text-center">
+                                    <i class="fa-solid fa-bezier-curve text-4xl mb-2"></i>
+                                    <p>在左侧解析 DFA 后，此处将显示图形</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex gap-4 text-xs text-slate-500">
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-400 border border-emerald-500"></span> 开始状态</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-white border-4 border-indigo-400"></span> 接受状态</div>
+                            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-100 border border-blue-400"></span> 普通状态</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 实验二：词法分析 (Scanner) -->
+        <section id="experiment-scanner" class="page-section hidden max-w-7xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">实验二：词法分析 (Scanner)</h2>
+                <p class="text-slate-500 mt-2">输入源程序代码，进行词法分析，并输出Token流。支持查看主文法DFA及状态转换表。</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- 左侧：输入控制 -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-slate-700"><i class="fa-solid fa-code mr-2"></i>源代码输入</h3>
+                            <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-file-upload"></i> 上传源文件
+                                <input type="file" id="scanner-file-upload" class="hidden" accept=".txt,.c,.cpp">
+                            </label>
+                        </div>
+                        <textarea id="scanner-input" class="w-full h-80 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none leading-relaxed" placeholder="请输入要分析的代码...&#10;例如：&#10;int main() {&#10;    float x = 3.14;&#10;    if (x > 0) {&#10;        return 1;&#10;    }&#10;}"></textarea>
+                        
+                        <div class="mt-4">
+                            <button id="btn-run-scanner" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-sm">
+                                执行词法分析
+                            </button>
+                        </div>
+                        <div id="scanner-status" class="mt-3 text-sm hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 右侧：输出与可视化 -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[600px] overflow-hidden">
+                        
+                        <!-- 标签页导航 -->
+                        <div class="flex border-b border-slate-200 bg-slate-50">
+                            <button class="scanner-tab-btn active flex-1 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 bg-white" data-target="scanner-result-tokens">
+                                <i class="fa-solid fa-list-ol mr-1"></i> Token 结果
+                            </button>
+                            <button class="scanner-tab-btn flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 border-b-2 border-transparent transition-colors" data-target="scanner-result-dfa">
+                                <i class="fa-solid fa-diagram-project mr-1"></i> 主文法 DFA 图
+                            </button>
+                            <button class="scanner-tab-btn flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 border-b-2 border-transparent transition-colors" data-target="scanner-result-table">
+                                <i class="fa-solid fa-table mr-1"></i> 状态转换表
+                            </button>
+                        </div>
+
+                        <!-- 标签页内容区 -->
+                        <div class="p-5 flex-1 relative overflow-hidden flex flex-col">
+                            
+                            <!-- Token 结果面板 -->
+                            <div id="scanner-result-tokens" class="scanner-tab-pane active h-full flex flex-col">
+                                <div class="flex justify-end mb-3">
+                                    <button id="btn-download-tokens" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-md transition-colors flex items-center gap-2 opacity-50 pointer-events-none" disabled>
+                                        <i class="fa-solid fa-download"></i> 导出结果
+                                    </button>
+                                </div>
+                                <div class="overflow-y-auto flex-1 border border-slate-200 rounded-lg">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-100 sticky top-0 z-10">
+                                            <tr>
+                                                <th class="py-2 px-4 border-b border-slate-200 text-sm font-semibold text-slate-600 w-16">#</th>
+                                                <th class="py-2 px-4 border-b border-slate-200 text-sm font-semibold text-slate-600 w-32">类型 (Type)</th>
+                                                <th class="py-2 px-4 border-b border-slate-200 text-sm font-semibold text-slate-600">值 (Value)</th>
+                                                <th class="py-2 px-4 border-b border-slate-200 text-sm font-semibold text-slate-600 w-24">行号 (Line)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="scanner-tokens-body" class="text-sm divide-y divide-slate-100 bg-white">
+                                            <tr>
+                                                <td colspan="4" class="py-8 text-center text-slate-400">
+                                                    <i class="fa-solid fa-ghost text-3xl mb-2"></i>
+                                                    <p>等待分析...</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 主文法 DFA 面板 -->
+                            <div id="scanner-result-dfa" class="scanner-tab-pane hidden h-full">
+                                <div id="scanner-network" class="w-full h-full border border-slate-100 rounded-lg bg-slate-50 relative"></div>
+                            </div>
+
+                            <!-- 状态转换表面板 -->
+                            <div id="scanner-result-table" class="scanner-tab-pane hidden h-full flex flex-col">
+                                <div class="overflow-auto flex-1 border border-slate-200 rounded-lg">
+                                    <table class="w-full text-left text-sm border-collapse bg-white whitespace-nowrap">
+                                        <thead class="bg-slate-100">
+                                            <tr>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">状态</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">动作描述</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100 border-l">字母</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">数字</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">+ | -</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">.</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">"</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">=|&lt;|&gt;|!</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">=</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">/</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">*</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">分隔符</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">\n</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">\(转义)</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">空白符</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">任意字符</th>
+                                                <th class="py-2 px-3 border-b border-slate-200 font-semibold text-slate-600 sticky top-0 bg-slate-100">其他</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="scanner-transition-body" class="divide-y divide-slate-100">
+                                            <!-- JS 动态填充 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 实验三：LR(0) 语法分析 -->
+        <section id="experiment-lr0" class="page-section hidden max-w-7xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">实验三：LR(0) 语法分析</h2>
+                <p class="text-slate-500 mt-2">输入文法规则，自动生成 LR(0) 项目集规范族与状态转移关系图。支持检测是否存在冲突。</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- 左侧：输入控制 -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-slate-700"><i class="fa-solid fa-list mr-2"></i>文法规则输入</h3>
+                            <label class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-file-upload"></i> 上传文件
+                                <input type="file" id="lr0-file-upload" class="hidden" accept=".txt">
+                            </label>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">支持使用 <code>-&gt;</code> 定义产生式，<code>|</code> 分割备选项。自动进行增广处理。</p>
+                        <textarea id="lr0-input" class="w-full h-80 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none leading-relaxed" placeholder="请输入文法...&#10;例如：&#10;S -> A&#10;A -> a B | b&#10;B -> c">S -> A&#10;A -> a B | b&#10;B -> c</textarea>
+                        
+                        <div class="mt-4">
+                            <button id="btn-run-lr0" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-sm">
+                                构建项目集规范族
+                            </button>
+                        </div>
+                        <div id="lr0-status" class="mt-3 text-sm hidden"></div>
+                    </div>
+                </div>
+
+                <!-- 右侧：输出与可视化 -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[600px] overflow-hidden">
+                        
+                        <!-- 标签页导航 -->
+                        <div class="flex border-b border-slate-200 bg-slate-50">
+                            <button class="lr0-tab-btn active flex-1 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 bg-white" data-target="lr0-result-text">
+                                <i class="fa-solid fa-file-lines mr-1"></i> 规范族输出
+                            </button>
+                            <button class="lr0-tab-btn flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 border-b-2 border-transparent transition-colors" data-target="lr0-result-graph">
+                                <i class="fa-solid fa-diagram-project mr-1"></i> 转移关系图
+                            </button>
+                        </div>
+
+                        <!-- 标签页内容区 -->
+                        <div class="p-5 flex-1 relative overflow-hidden flex flex-col">
+                            
+                            <!-- 规范族文本输出面板 -->
+                            <div id="lr0-result-text" class="lr0-tab-pane active h-full flex flex-col">
+                                <div class="flex justify-end mb-3">
+                                    <button id="btn-download-lr0" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-md transition-colors flex items-center gap-2 opacity-50 pointer-events-none" disabled>
+                                        <i class="fa-solid fa-download"></i> 导出结果
+                                    </button>
+                                </div>
+                                <div class="overflow-y-auto flex-1 border border-slate-200 rounded-lg p-4 bg-slate-50 font-mono text-sm whitespace-pre-wrap text-slate-700" id="lr0-text-output">
+                                    等待构建...
+                                </div>
+                            </div>
+
+                            <!-- 转移关系图面板 -->
+                            <div id="lr0-result-graph" class="lr0-tab-pane hidden h-full">
+                                <div id="lr0-network" class="w-full h-full border border-slate-100 rounded-lg bg-slate-50 relative"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 占位实验页面 -->
+        <section id="experiment-placeholder" class="page-section hidden max-w-7xl mx-auto flex items-center justify-center h-full">
+            <div class="text-center text-slate-400">
+                <i class="fa-solid fa-person-digging text-6xl mb-4"></i>
+                <h2 class="text-2xl font-bold text-slate-600">模块开发中</h2>
+                <p class="mt-2">该实验内容暂未开放，敬请期待。</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+    <script src="dfa.js"></script>
+    <script src="scanner.js"></script>
+    <script src="lr0.js"></script>
+</body>
+</html>

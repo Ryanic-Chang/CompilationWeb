@@ -1,0 +1,81 @@
+# 编译原理实验平台 (Compilation Web)
+
+<div align="center">
+  <p>
+    <a href="https://ryanic-chang.github.io/CompilationWeb/" target="_blank">
+      <img src="https://img.shields.io/badge/🚀_在线体验-Online_Demo-indigo?style=for-the-badge&logo=vercel" alt="Online Demo">
+    </a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
+    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  </p>
+</div>
+
+这是一个风格明亮、现代化的编译原理实验网页版平台，旨在将传统的编译原理实验（如 DFA 模拟、词法分析、LR(0) 语法分析等）通过可视化的方式在网页端直接展示，提升学习体验、交互性和对算法的理解。
+
+欢迎点点star⭐~
+
+## ✨ 特性
+
+- **现代化 UI**: 基于 HTML5 + Tailwind CSS (CDN) 构建，界面明亮、结构清晰的响应式设计。
+- **纯前端架构**: 无需复杂的后端或 Node.js 构建工具，纯浏览器原生运行，克隆即用。
+- **动态可视化**: 借助 `vis-network` 图形库，将晦涩难懂的状态转移、语法树等数据结构转化为直观的动态交互图。
+- **高可扩展性**: 侧边栏支持多级网页导航，预留了多个实验的插槽，方便后续以模块化的形式添加新实验（如 `ll1.js`, `lr1.js`）。
+- **人性化输入**: 支持直接手写、结构化表单输入或通过 `txt` 文件一键上传（自动解析与智能回填表单），极大简化了测试数据的准备。
+
+## 🚀 快速开始
+
+本项目为纯静态前端页面，运行非常简单：
+
+1. 克隆或下载本仓库到本地：
+   ```bash
+   git clone https://github.com/your-username/compilation-web.git
+   ```
+2. 直接使用任何现代浏览器（Chrome、Edge 等）打开目录下的 `index.html` 文件即可。
+3. （可选）如果您需要使用 VS Code 进行二次开发，推荐安装 `Live Server` 插件，并在项目根目录启动服务，以获得更佳的热更新体验。
+
+## 📂 项目结构
+
+```text
+CompilationWeb/
+├── index.html      # 主页面：包含侧边栏导航和所有实验模块的 DOM 结构
+├── style.css       # 样式文件：页面切换动画与定制 UI 细节
+├── app.js          # 核心交互：控制多级网页的切换与通用 UI 逻辑
+├── dfa.js          # 实验一模块：DFA 核心类（解析、校验、生成字符串）及专属 UI 事件
+├── scanner.js      # 实验二模块：词法分析器 (Scanner) 引擎、DFA 图表及表格渲染逻辑
+├── lr0.js          # 实验三模块：LR(0) 语法分析核心引擎（闭包、GoTo、冲突检测）及 UI 事件
+└── .trae/          # AI 辅助开发目录：存放项目专属开发规范 Skill
+```
+
+## 🛠️ 当前与后续开发计划
+
+- [x] **实验一：DFA 模拟与可视化**
+  - 五元组解析与合法性验证
+  - 输入字符串匹配
+  - 生成指定长度内的所有接受字符串
+  - 自动渲染状态转移图
+- [x] **实验二：词法分析 (Scanner)**
+  - 支持完整的 C 风格词法记号（关键字、标识符、整数/浮点数、字符串、运算符、界符）
+  - 支持 `//` 单行与 `/* */` 多行注释过滤
+  - 通过上下文向前查看 (lookahead) 机制解决 `+`/`-` 符号与数字粘连问题
+  - 交互式的 Token 流表格与导出结果功能
+  - 绘制并展示主文法的 0~22 状态机 DFA 图及详细状态转换表
+- [x] **实验三：LR(0) 语法分析**
+  - 支持 `->` 产生式定义及 `|` 备选项分隔解析
+  - 自动对文法进行增广处理（生成 `S' -> S`）
+  - 核心算法实现：项目集闭包 (`Closure`) 与状态转移 (`GoTo`)
+  - 移进-归约 / 归约-归约 冲突自动检测
+  - 项目集规范族生成及文本格式导出
+  - 可视化转移关系图（Box 形态，区分内核项与闭包项）
+- [ ] **实验四：语义分析** (规划中)
+
+## 🤖 AI 辅助开发指南 (Skill)
+
+为了保证后续通过 AI (如 Trae 等) 持续开发本项目时，能够维持一致的代码风格、架构和 UI 规范，我们在 `.trae/skills/compilation-web-dev/SKILL.md` 中预设了项目专用的 AI 开发规范 (Skill)。
+AI 在接收到新实验开发需求时，会自动读取该文件以确保新模块能够完美融入当前架构。
+
+## 📄 开源协议
+
+本项目采用 [MIT License](LICENSE) 开源，欢迎提交 Pull Request 和 Issue 一起完善编译原理的实验体验！

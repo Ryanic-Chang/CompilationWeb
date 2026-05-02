@@ -1,0 +1,22 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Optional Dependency directories (if added later)
+node_modules/
+jspm_packages/
+package-lock.json
+yarn.lock
+
+# Optional: ignore local config
+.env
+.env.local
