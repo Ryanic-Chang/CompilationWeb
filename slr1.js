@@ -4,6 +4,25 @@ function slr1TrimAndClean(str) {
     return str.trim().replace(/\s+/g, ' ');
 }
 
+function compareSLR1Items(a, b) {
+    if (a.production.id !== b.production.id) {
+        return a.production.id - b.production.id;
+    }
+    return a.dotPos - b.dotPos;
+}
+
+function sameSLR1ItemSet(a, b) {
+    if (a.items.length !== b.items.length) {
+        return false;
+    }
+    for (let i = 0; i < a.items.length; i++) {
+        if (a.items[i].hash() !== b.items[i].hash()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 class SLR1Production {
     constructor(lhs, rhs, id) {
         this.lhs = lhs.trim();
@@ -23,12 +42,13 @@ class SLR1Item {
     }
 
     toString() {
-        if (this.production.rhs.length === 0) {
-            return `${this.production.lhs} -> ε ·`.trim();
+        let parts = [`${this.production.lhs} ->`];
+        for (let i = 0; i < this.production.rhs.length; i++) {
+            if (i === this.dotPos) parts.push('·');
+            parts.push(this.production.rhs[i]);
         }
-        let rhsStrs = [...this.production.rhs];
-        rhsStrs.splice(this.dotPos, 0, '·');
-        return `${this.production.lhs} -> ${rhsStrs.join(' ')}`.trim();
+        if (this.dotPos === this.production.rhs.length) parts.push('·');
+        return parts.join(' ').trim();
     }
 
     hash() {
@@ -40,21 +60,17 @@ class SLR1ItemSet {
     constructor(id) {
         this.id = id;
         this.items = [];
-        this._hash = null;
     }
 
     addItem(item) {
         if (!this.items.some(i => i.hash() === item.hash())) {
             this.items.push(item);
-            this._hash = null;
+            this.items.sort(compareSLR1Items);
         }
     }
 
     hash() {
-        if (this._hash === null) {
-            this._hash = this.items.map(i => i.hash()).sort().join('|');
-        }
-        return this._hash;
+        return this.items.map(i => i.hash()).join('|');
     }
 }
 
@@ -77,7 +93,23 @@ class SLR1ParserGenerator {
         this.slrGotoTable = [];
 
         this.conflicts = [];
+        this.conflictCells = new Set();
         this.isSLR1 = true;
+
+        if (this.productions.length === 0 || this.productions[0].lhs !== this.startSymbol + "'") {
+            let augmentedProds = [];
+            augmentedProds.push(new SLR1Production(this.startSymbol + "'", [this.startSymbol], 0));
+            for (let i = 0; i < this.productions.length; i++) {
+                let prod = this.productions[i];
+                prod.id = i + 1;
+                augmentedProds.push(prod);
+            }
+            this.productions = augmentedProds;
+        }
+
+        this.collectSymbols();
+        this.computeFirstSets();
+        this.computeFollowSets();
     }
 
     isKernelItem(item) {
@@ -104,6 +136,7 @@ class SLR1ParserGenerator {
     }
 
     computeFirstSets() {
+        this.firstSets.clear();
         for (let nt of this.nonTerminals) {
             this.firstSets.set(nt, new Set());
         }
@@ -123,8 +156,6 @@ class SLR1ParserGenerator {
                     if (this.nonTerminals.has(sym)) {
                         let symFirst = this.firstSets.get(sym);
                         let lhsFirst = this.firstSets.get(lhs);
-                        let initialSize = lhsFirst.size;
-                        
                         for (let s of symFirst) {
                             if (s !== 'ε' && !lhsFirst.has(s)) {
                                 lhsFirst.add(s);
@@ -159,6 +190,7 @@ class SLR1ParserGenerator {
     }
 
     computeFollowSets() {
+        this.followSets.clear();
         for (let nt of this.nonTerminals) {
             this.followSets.set(nt, new Set());
         }
@@ -224,11 +256,9 @@ class SLR1ParserGenerator {
 
     closure(itemSet) {
         let result = new SLR1ItemSet(itemSet.id);
-        result.items = [...itemSet.items];
+        result.items = [...itemSet.items].sort(compareSLR1Items);
 
         let changed = true;
-        let itemHashes = new Set(result.items.map(i => i.hash()));
-        
         while (changed) {
             changed = false;
             let newItems = [];
@@ -240,10 +270,9 @@ class SLR1ParserGenerator {
                     for (let prod of this.productions) {
                         if (prod.lhs === nextSymbol) {
                             let newItem = new SLR1Item(prod, 0);
-                            let h = newItem.hash();
-                            
-                            if (!itemHashes.has(h)) {
-                                itemHashes.add(h);
+                            let existsInResult = result.items.some(i => i.hash() === newItem.hash());
+                            let existsInNew = newItems.some(i => i.hash() === newItem.hash());
+                            if (!existsInResult && !existsInNew) {
                                 newItems.push(newItem);
                                 changed = true;
                             }
@@ -253,8 +282,7 @@ class SLR1ParserGenerator {
             }
             
             for (let item of newItems) {
-                result.items.push(item);
-                result._hash = null;
+                result.addItem(item);
             }
         }
         return result;
@@ -273,21 +301,13 @@ class SLR1ParserGenerator {
     }
 
     buildCanonicalCollection() {
-        if (this.productions.length === 0 || this.productions[0].lhs !== this.startSymbol + "'") {
-            let augmentedProds = [];
-            augmentedProds.push(new SLR1Production(this.startSymbol + "'", [this.startSymbol], 0));
-            
-            for (let i = 0; i < this.productions.length; i++) {
-                let prod = this.productions[i];
-                prod.id = i + 1;
-                augmentedProds.push(prod);
-            }
-            this.productions = augmentedProds;
-        }
-
-        this.collectSymbols();
-        this.computeFirstSets();
-        this.computeFollowSets();
+        this.itemSets = [];
+        this.gotoTable = new Map();
+        this.actionTable = [];
+        this.slrGotoTable = [];
+        this.conflicts = [];
+        this.conflictCells = new Set();
+        this.isSLR1 = true;
 
         let initial = new SLR1ItemSet(0);
         initial.addItem(new SLR1Item(this.productions[0], 0));
@@ -295,8 +315,6 @@ class SLR1ParserGenerator {
         this.itemSets.push(initial);
 
         let unprocessed = [0];
-        let setHashes = new Map();
-        setHashes.set(initial.hash(), 0);
 
         while (unprocessed.length > 0) {
             let currentId = unprocessed.shift();
@@ -310,18 +328,22 @@ class SLR1ParserGenerator {
                 }
             }
 
-            for (let symbol of symbols) {
+            for (let symbol of Array.from(symbols).sort()) {
                 let newSet = this.goTo(current, symbol);
                 if (newSet.items.length === 0) continue;
 
-                let h = newSet.hash();
-                let existingId = setHashes.get(h);
+                let existingId = -1;
+                for (let existing of this.itemSets) {
+                    if (sameSLR1ItemSet(existing, newSet)) {
+                        existingId = existing.id;
+                        break;
+                    }
+                }
 
-                if (existingId === undefined) {
+                if (existingId === -1) {
                     newSet.id = this.itemSets.length;
                     this.itemSets.push(newSet);
                     unprocessed.push(newSet.id);
-                    setHashes.set(h, newSet.id);
                     existingId = newSet.id;
                 }
 
@@ -341,9 +363,14 @@ class SLR1ParserGenerator {
     buildSLR1Table() {
         this.isSLR1 = true;
         this.conflicts = [];
+        this.conflictCells = new Set();
+        this.actionTable = [];
+        this.slrGotoTable = [];
 
         for (let itemSet of this.itemSets) {
             let i = itemSet.id;
+            this.actionTable[i] = {};
+            this.slrGotoTable[i] = {};
 
             for (let item of itemSet.items) {
                 // 移进项目
@@ -354,48 +381,27 @@ class SLR1ParserGenerator {
                     if (this.terminals.has(nextSym)) {
                         let nextId = this.gotoTable.get(`${i}_${nextSym}`);
                         if (nextId !== undefined) {
-                            let act = "s" + nextId;
-                            if (this.actionTable[i][nextSym] && this.actionTable[i][nextSym] !== act) {
-                                if (!this.actionTable[i][nextSym].split('/').includes(act)) {
-                                    this.isSLR1 = false;
-                                    this.conflicts.push(`状态 ${i} 输入 ${nextSym} 存在冲突: 已有动作 ${this.actionTable[i][nextSym]} 新动作 ${act}`);
-                                    this.actionTable[i][nextSym] += "/" + act;
-                                }
-                            } else {
-                                this.actionTable[i][nextSym] = act;
-                            }
+                            this.actionTable[i][nextSym] = "s" + nextId;
                         }
                     }
                 } 
-                // 接受项目
-                else if (item.production.id === 0) {
-                    let act = "acc";
-                    if (this.actionTable[i]['$'] && this.actionTable[i]['$'] !== act) {
-                        if (!this.actionTable[i]['$'].split('/').includes(act)) {
-                            this.isSLR1 = false;
-                            this.conflicts.push(`状态 ${i} 输入 $ 存在冲突: 已有动作 ${this.actionTable[i]['$']} 新动作 ${act}`);
-                            this.actionTable[i]['$'] += "/" + act;
-                        }
-                    } else {
-                        this.actionTable[i]['$'] = act;
-                    }
-                }
                 // 归约项目
-                else { // 不是增广的起始式且 dotPos == rhs.length
+                else if (item.production.id !== 0) {
                     let lhs = item.production.lhs;
-                    let follow = this.followSets.get(lhs);
+                    let follow = Array.from(this.followSets.get(lhs)).sort();
                     for (let a of follow) {
                         let act = "r" + item.production.id;
                         if (this.actionTable[i][a] && this.actionTable[i][a] !== act) {
-                            if (!this.actionTable[i][a].split('/').includes(act)) {
-                                this.isSLR1 = false;
-                                this.conflicts.push(`状态 ${i} 输入 ${a} 存在冲突: 已有动作 ${this.actionTable[i][a]} 新动作 ${act}`);
-                                this.actionTable[i][a] += "/" + act;
-                            }
-                        } else {
-                            this.actionTable[i][a] = act;
+                            this.isSLR1 = false;
+                            this.conflicts.push(`SLR(1)冲突: 状态${i} 符号${a} 已有动作${this.actionTable[i][a]} 新动作r${item.production.id}`);
+                            this.conflictCells.add(`${i}_${a}`);
                         }
+                        this.actionTable[i][a] = act;
                     }
+                }
+                // 接受项目
+                else if (item.production.lhs === this.startSymbol + "'") {
+                    this.actionTable[i]['$'] = "acc";
                 }
             }
 
@@ -410,13 +416,13 @@ class SLR1ParserGenerator {
 
     generateTextOutput() {
         let out = "=== FIRST 集 ===\n";
-        for (let nt of this.nonTerminals) {
-            out += `FIRST(${nt}) = { ${Array.from(this.firstSets.get(nt)).join(', ')} }\n`;
+        for (let nt of Array.from(this.nonTerminals).sort()) {
+            out += `FIRST(${nt}) = { ${Array.from(this.firstSets.get(nt)).sort().join(', ')} }\n`;
         }
         
         out += "\n=== FOLLOW 集 ===\n";
-        for (let nt of this.nonTerminals) {
-            out += `FOLLOW(${nt}) = { ${Array.from(this.followSets.get(nt)).join(', ')} }\n`;
+        for (let nt of Array.from(this.nonTerminals).sort()) {
+            out += `FOLLOW(${nt}) = { ${Array.from(this.followSets.get(nt)).sort().join(', ')} }\n`;
         }
 
         out += "\n=== 项目集规范族 ===\n\n";
@@ -461,10 +467,9 @@ function parseSLR1Grammar(text) {
 
         for (let altStr of altStrings) {
             let rhs = altStr.split(/\s+/).filter(s => s.length > 0);
-            if (rhs.length === 1 && rhs[0] === 'ε') {
-                rhs = [];
+            if (rhs.length > 0) {
+                productions.push(new SLR1Production(lhs, rhs, id++));
             }
-            productions.push(new SLR1Production(lhs, rhs, id++));
         }
     }
 
@@ -632,7 +637,7 @@ function renderSLR1Table(generator) {
         // ACTION
         terms.forEach(t => {
             let act = generator.actionTable[i][t] || "";
-            let colorCls = act.includes('/') ? "text-red-500 font-bold" : "text-indigo-600";
+            let colorCls = generator.conflictCells.has(`${i}_${t}`) ? "text-red-500 font-bold" : "text-indigo-600";
             bodyHtml += `<td class="py-2 px-3 border border-slate-100 font-mono ${colorCls}">${act}</td>`;
         });
         
