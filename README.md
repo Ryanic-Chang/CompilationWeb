@@ -75,4 +75,4 @@ AI 在接收到新实验开发需求时，会自动读取该文件以确保新�
 
 ## 📄 开源协议
 
-本项目采用 [MIT License](LICENSE) 开源，欢迎提交 Pull Request 和 Issue 一起完善编译原理的实验体验！！！
+本项目采用 [MIT License](LICENSE) 开源，欢迎提交 Pull Request 和 Issue 一起完善编译原理的实验体验！
