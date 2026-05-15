@@ -23,12 +23,10 @@ class SLR1Item {
     }
 
     toString() {
-        let rhsStrs = [...this.production.rhs];
-        // 如果是空串 ε，特殊处理展示
-        if (rhsStrs.length === 1 && rhsStrs[0] === 'ε') {
-            if (this.dotPos === 0) return `${this.production.lhs} -> · ε`.trim();
-            else return `${this.production.lhs} -> ε ·`.trim();
+        if (this.production.rhs.length === 0) {
+            return `${this.production.lhs} -> ε ·`.trim();
         }
+        let rhsStrs = [...this.production.rhs];
         rhsStrs.splice(this.dotPos, 0, '·');
         return `${this.production.lhs} -> ${rhsStrs.join(' ')}`.trim();
     }
@@ -42,16 +40,21 @@ class SLR1ItemSet {
     constructor(id) {
         this.id = id;
         this.items = [];
+        this._hash = null;
     }
 
     addItem(item) {
         if (!this.items.some(i => i.hash() === item.hash())) {
             this.items.push(item);
+            this._hash = null;
         }
     }
 
     hash() {
-        return this.items.map(i => i.hash()).sort().join('|');
+        if (this._hash === null) {
+            this._hash = this.items.map(i => i.hash()).sort().join('|');
+        }
+        return this._hash;
     }
 }
 
@@ -224,6 +227,7 @@ class SLR1ParserGenerator {
         result.items = [...itemSet.items];
 
         let changed = true;
+        let itemHashes = new Set(result.items.map(i => i.hash()));
         
         while (changed) {
             changed = false;
@@ -236,11 +240,10 @@ class SLR1ParserGenerator {
                     for (let prod of this.productions) {
                         if (prod.lhs === nextSymbol) {
                             let newItem = new SLR1Item(prod, 0);
+                            let h = newItem.hash();
                             
-                            let existsInResult = result.items.some(i => i.hash() === newItem.hash());
-                            let existsInNew = newItems.some(i => i.hash() === newItem.hash());
-                            
-                            if (!existsInResult && !existsInNew) {
+                            if (!itemHashes.has(h)) {
+                                itemHashes.add(h);
                                 newItems.push(newItem);
                                 changed = true;
                             }
@@ -250,7 +253,8 @@ class SLR1ParserGenerator {
             }
             
             for (let item of newItems) {
-                result.addItem(item);
+                result.items.push(item);
+                result._hash = null;
             }
         }
         return result;
@@ -291,6 +295,8 @@ class SLR1ParserGenerator {
         this.itemSets.push(initial);
 
         let unprocessed = [0];
+        let setHashes = new Map();
+        setHashes.set(initial.hash(), 0);
 
         while (unprocessed.length > 0) {
             let currentId = unprocessed.shift();
@@ -308,18 +314,14 @@ class SLR1ParserGenerator {
                 let newSet = this.goTo(current, symbol);
                 if (newSet.items.length === 0) continue;
 
-                let existingId = -1;
-                for (let existing of this.itemSets) {
-                    if (existing.hash() === newSet.hash()) {
-                        existingId = existing.id;
-                        break;
-                    }
-                }
+                let h = newSet.hash();
+                let existingId = setHashes.get(h);
 
-                if (existingId === -1) {
+                if (existingId === undefined) {
                     newSet.id = this.itemSets.length;
                     this.itemSets.push(newSet);
                     unprocessed.push(newSet.id);
+                    setHashes.set(h, newSet.id);
                     existingId = newSet.id;
                 }
 
@@ -353,31 +355,47 @@ class SLR1ParserGenerator {
                         let nextId = this.gotoTable.get(`${i}_${nextSym}`);
                         if (nextId !== undefined) {
                             let act = "s" + nextId;
-                            this.actionTable[i][nextSym] = act;
+                            if (this.actionTable[i][nextSym] && this.actionTable[i][nextSym] !== act) {
+                                if (!this.actionTable[i][nextSym].split('/').includes(act)) {
+                                    this.isSLR1 = false;
+                                    this.conflicts.push(`状态 ${i} 输入 ${nextSym} 存在冲突: 已有动作 ${this.actionTable[i][nextSym]} 新动作 ${act}`);
+                                    this.actionTable[i][nextSym] += "/" + act;
+                                }
+                            } else {
+                                this.actionTable[i][nextSym] = act;
+                            }
                         }
                     }
                 } 
+                // 接受项目
+                else if (item.production.id === 0) {
+                    let act = "acc";
+                    if (this.actionTable[i]['$'] && this.actionTable[i]['$'] !== act) {
+                        if (!this.actionTable[i]['$'].split('/').includes(act)) {
+                            this.isSLR1 = false;
+                            this.conflicts.push(`状态 ${i} 输入 $ 存在冲突: 已有动作 ${this.actionTable[i]['$']} 新动作 ${act}`);
+                            this.actionTable[i]['$'] += "/" + act;
+                        }
+                    } else {
+                        this.actionTable[i]['$'] = act;
+                    }
+                }
                 // 归约项目
-                else if (item.production.id !== 0) { // 不是增广的起始式
+                else { // 不是增广的起始式且 dotPos == rhs.length
                     let lhs = item.production.lhs;
-                    
-                    // 对FOLLOW(lhs)中的每个终结符a，添加归约动作
                     let follow = this.followSets.get(lhs);
                     for (let a of follow) {
-                        // 检查是否存在冲突
                         let act = "r" + item.production.id;
                         if (this.actionTable[i][a] && this.actionTable[i][a] !== act) {
-                            this.isSLR1 = false;
-                            this.conflicts.push(`状态 ${i} 输入 ${a} 存在冲突: 已有动作 ${this.actionTable[i][a]} 新动作 ${act}`);
-                            this.actionTable[i][a] += "/" + act;
+                            if (!this.actionTable[i][a].split('/').includes(act)) {
+                                this.isSLR1 = false;
+                                this.conflicts.push(`状态 ${i} 输入 ${a} 存在冲突: 已有动作 ${this.actionTable[i][a]} 新动作 ${act}`);
+                                this.actionTable[i][a] += "/" + act;
+                            }
                         } else {
                             this.actionTable[i][a] = act;
                         }
                     }
-                }
-                // 接受项目
-                else if (item.production.lhs === this.startSymbol + "'") {
-                    this.actionTable[i]['$'] = "acc";
                 }
             }
 
@@ -443,9 +461,10 @@ function parseSLR1Grammar(text) {
 
         for (let altStr of altStrings) {
             let rhs = altStr.split(/\s+/).filter(s => s.length > 0);
-            if (rhs.length > 0) {
-                productions.push(new SLR1Production(lhs, rhs, id++));
+            if (rhs.length === 1 && rhs[0] === 'ε') {
+                rhs = [];
             }
+            productions.push(new SLR1Production(lhs, rhs, id++));
         }
     }
 
