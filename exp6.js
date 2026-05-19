@@ -361,7 +361,79 @@ function buildIrReport(astText, errors, tacText, quadText) {
     return lines.join("\n");
 }
 
+let irNetwork = null;
 let currentIrReport = "";
+
+function drawIrAst(root) {
+    const container = document.getElementById("ir-network");
+    if (!container) return;
+
+    if (irNetwork) {
+        irNetwork.destroy();
+        irNetwork = null;
+    }
+
+    if (!root) {
+        container.innerHTML = `<div class="absolute inset-0 flex items-center justify-center text-slate-400"><div class="text-center"><i class="fa-solid fa-diagram-project text-4xl mb-2"></i><p>运行实验后显示 AST 图</p></div></div>`;
+        return;
+    }
+
+    container.innerHTML = "";
+    const nodes = [];
+    const edges = [];
+    let nextId = 0;
+
+    function walk(node, parentId = null) {
+        const id = nextId++;
+        let label = node.node_type;
+        if (node.value) label += `\n${node.value}`;
+        if (node.data_type) label += `\n[${node.data_type}]`;
+        nodes.push({
+            id,
+            label,
+            shape: "box",
+            color: { background: "#F8FAFC", border: "#CBD5E1" },
+            font: {
+                color: "#334155",
+                size: 13,
+                face: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                align: "center"
+            },
+            borderWidth: 2
+        });
+        if (parentId !== null) {
+            edges.push({
+                from: parentId,
+                to: id,
+                arrows: "to",
+                color: { color: "#94A3B8" }
+            });
+        }
+        for (const child of node.children) {
+            walk(child, id);
+        }
+    }
+
+    walk(root);
+
+    irNetwork = new vis.Network(container, {
+        nodes: new vis.DataSet(nodes),
+        edges: new vis.DataSet(edges)
+    }, {
+        physics: false,
+        layout: {
+            hierarchical: {
+                enabled: true,
+                direction: "UD",
+                sortMethod: "directed",
+                nodeSpacing: 110,
+                levelSeparation: 90
+            }
+        },
+        interaction: { dragNodes: true },
+        edges: { smooth: { type: "cubicBezier", roundness: 0.35 } }
+    });
+}
 
 if (typeof document !== "undefined") {
     document.addEventListener("DOMContentLoaded", async () => {
@@ -428,6 +500,9 @@ if (typeof document !== "undefined") {
                 const targetId = btn.getAttribute("data-target");
                 const targetPane = document.getElementById(targetId);
                 if (targetPane) targetPane.classList.remove("hidden");
+                if (targetId === "ir-result-ast" && irNetwork) {
+                    irNetwork.fit();
+                }
             });
         });
 
@@ -472,7 +547,7 @@ if (typeof document !== "undefined") {
                 const tacText = icg.formatThreeAddressCode();
                 const quadText = icg.formatQuadruples();
 
-                document.getElementById("ir-ast-output").textContent = astText;
+                drawIrAst(result.root);
                 document.getElementById("ir-tac-output").textContent = tacText;
                 document.getElementById("ir-quad-output").textContent = quadText;
                 renderIrErrors(result.semanticErrors);
@@ -487,7 +562,7 @@ if (typeof document !== "undefined") {
                     showIrStatus("实验六运行成功，已生成 AST、语义错误报告、三地址码和四元式。", "success");
                 }
             } catch (error) {
-                document.getElementById("ir-ast-output").textContent = "未生成 AST。";
+                drawIrAst(null);
                 document.getElementById("ir-tac-output").textContent = "未生成三地址码。";
                 document.getElementById("ir-quad-output").textContent = "未生成四元式。";
                 renderIrErrors([error.message]);
@@ -495,5 +570,7 @@ if (typeof document !== "undefined") {
                 console.error(error);
             }
         });
+
+        drawIrAst(null);
     });
 }
