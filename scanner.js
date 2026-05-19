@@ -1,73 +1,57 @@
 // scanner.js - 词法分析器 (Scanner) 核心逻辑与页面交互
 
-// Token类型枚举模拟
 const TokenType = {
-    // 标识符和字面量
-    ID: "ID",             // 标识符
-    INT: "INT",           // 整数
-    FLO: "FLO",           // 浮点数
-    STRING_LIT: "STRING_LIT", // 字符串字面量
-    
-    // 算术运算符 o
-    ADD: "ADD",           // +
-    SUB: "SUB",           // -
-    MUL: "MUL",           // *
-    DIV: "DIV",           // /
-    AAA: "AAA",           // ++
-    AAS: "AAS",           // +=
-    
-    // 关系运算符 r
-    LT: "LT",             // <
-    GT: "GT",             // >
-    EQ: "EQ",             // ==
-    LE: "LE",             // <=
-    GE: "GE",             // >=
-    NE: "NE",             // !=
-    
-    // 逻辑运算符 (BOP)
-    AND: "AND",           // &&
-    OR: "OR",             // ||
-    NOT: "NOT",           // !
-    
-    // 赋值
-    ASG: "ASG",           // =
-    
-    // 分隔符
-    LPA: "LPA",           // (
-    RPA: "RPA",           // )
-    LBK: "LBK",           // [
-    RBK: "RBK",           // ]
-    LBR: "LBR",           // {
-    RBR: "RBR",           // }
-    CMA: "CMA",           // ,
-    SCO: "SCO",           // ;
-    
-    // 关键字
-    INT_KW: "INT_KW",     // int
-    FLOAT_KW: "FLOAT_KW", // float
-    IF_KW: "IF_KW",       // if
-    ELSE_KW: "ELSE_KW",   // else
-    WHILE_KW: "WHILE_KW", // while
-    RETURN_KW: "RETURN_KW",// return
-    INPUT_KW: "INPUT_KW", // input
-    PRINT_KW: "PRINT_KW", // print
-    VOID_KW: "VOID_KW",   // void
-    
-    // 特殊标记
+    ID: "ID",
+    INT: "INT",
+    FLO: "FLO",
+    STRING_LIT: "STRING_LIT",
+    ADD: "ADD",
+    SUB: "SUB",
+    MUL: "MUL",
+    DIV: "DIV",
+    LT: "LT",
+    GT: "GT",
+    EQ: "EQ",
+    LE: "LE",
+    GE: "GE",
+    NE: "NE",
+    AND: "AND",
+    OR: "OR",
+    NOT: "NOT",
+    ASG: "ASG",
+    LPA: "LPA",
+    RPA: "RPA",
+    LBK: "LBK",
+    RBK: "RBK",
+    LBR: "LBR",
+    RBR: "RBR",
+    CMA: "CMA",
+    SCO: "SCO",
+    INT_KW: "INT_KW",
+    FLOAT_KW: "FLOAT_KW",
+    IF_KW: "IF_KW",
+    ELSE_KW: "ELSE_KW",
+    WHILE_KW: "WHILE_KW",
+    FOR_KW: "FOR_KW",
+    RETURN_KW: "RETURN_KW",
+    INPUT_KW: "INPUT_KW",
+    PRINT_KW: "PRINT_KW",
+    VOID_KW: "VOID_KW",
     END_OF_FILE: "EOF",
     UNKNOWN: "UNKNOWN"
 };
 
 const Keywords = {
-    "int": TokenType.INT_KW,
-    "float": TokenType.FLOAT_KW,
-    "if": TokenType.IF_KW,
-    "else": TokenType.ELSE_KW,
-    "while": TokenType.WHILE_KW,
-    "return": TokenType.RETURN_KW,
-    "input": TokenType.INPUT_KW,
-    "print": TokenType.PRINT_KW,
-    "void": TokenType.VOID_KW
+    int: TokenType.INT_KW,
+    float: TokenType.FLOAT_KW,
+    if: TokenType.IF_KW,
+    else: TokenType.ELSE_KW,
+    while: TokenType.WHILE_KW,
+    for: TokenType.FOR_KW,
+    return: TokenType.RETURN_KW,
+    input: TokenType.INPUT_KW,
+    print: TokenType.PRINT_KW,
+    void: TokenType.VOID_KW
 };
 
 class Token {
@@ -84,7 +68,6 @@ class Scanner {
         this.pos = 0;
         this.currentLine = 1;
         this.currentChar = this.input.length > 0 ? this.input[0] : '\0';
-        this.lastToken = null; // 用于跟踪上一个 token 的上下文
     }
 
     advance() {
@@ -101,6 +84,21 @@ class Scanner {
             return this.input[this.pos + 1];
         }
         return '\0';
+    }
+
+    peekSecond() {
+        if (this.pos + 2 < this.input.length) {
+            return this.input[this.pos + 2];
+        }
+        return '\0';
+    }
+
+    isIdentifierStart(ch) {
+        return /[A-Za-z_]/.test(ch);
+    }
+
+    isIdentifierPart(ch) {
+        return /[A-Za-z0-9_]/.test(ch);
     }
 
     skipWhitespace() {
@@ -141,12 +139,11 @@ class Scanner {
         let value = "";
         let startLine = this.currentLine;
 
-        // ID = [a-zA-Z_][a-zA-Z0-9_]*
-        if (/[a-zA-Z_]/.test(this.currentChar)) {
+        if (this.isIdentifierStart(this.currentChar)) {
             value += this.currentChar;
             this.advance();
             
-            while (/[a-zA-Z0-9_]/.test(this.currentChar)) {
+            while (this.isIdentifierPart(this.currentChar)) {
                 value += this.currentChar;
                 this.advance();
             }
@@ -163,19 +160,6 @@ class Scanner {
         let value = "";
         let startLine = this.currentLine;
         let isFloat = false;
-
-        // 如果是符号（+或-），只在后面跟着数字，或者后面跟着小数点且再后面是数字时，才被视为数字的一部分
-        if (this.currentChar === '+' || this.currentChar === '-') {
-            let nextChar = this.peek();
-            // 如果加减号后直接是数字，或者加减号后是小数点且再后是数字
-            if (/\d/.test(nextChar) || (nextChar === '.' && /\d/.test(this.input[this.pos + 2]))) {
-                value += this.currentChar;
-                this.advance();
-            } else {
-                // 如果后面不是数字结构，则说明它应该是一个运算符，而不是正负号，退回给运算符处理
-                return null;
-            }
-        }
 
         while (/\d/.test(this.currentChar)) {
             value += this.currentChar;
@@ -228,18 +212,11 @@ class Scanner {
 
     scanOperator() {
         let startLine = this.currentLine;
-        let char = this.currentChar;
+        let value = this.currentChar;
         
-        switch (char) {
+        switch (this.currentChar) {
             case '+':
                 this.advance();
-                if (this.currentChar === '+') {
-                    this.advance();
-                    return new Token(TokenType.AAA, "++", startLine);
-                } else if (this.currentChar === '=') {
-                    this.advance();
-                    return new Token(TokenType.AAS, "+=", startLine);
-                }
                 return new Token(TokenType.ADD, "+", startLine);
             case '-':
                 this.advance();
@@ -253,45 +230,51 @@ class Scanner {
             case '=':
                 this.advance();
                 if (this.currentChar === '=') {
+                    value += this.currentChar;
                     this.advance();
-                    return new Token(TokenType.EQ, "==", startLine);
+                    return new Token(TokenType.EQ, value, startLine);
                 }
                 return new Token(TokenType.ASG, "=", startLine);
             case '<':
                 this.advance();
                 if (this.currentChar === '=') {
+                    value += this.currentChar;
                     this.advance();
-                    return new Token(TokenType.LE, "<=", startLine);
+                    return new Token(TokenType.LE, value, startLine);
                 }
                 return new Token(TokenType.LT, "<", startLine);
             case '>':
                 this.advance();
                 if (this.currentChar === '=') {
+                    value += this.currentChar;
                     this.advance();
-                    return new Token(TokenType.GE, ">=", startLine);
+                    return new Token(TokenType.GE, value, startLine);
                 }
                 return new Token(TokenType.GT, ">", startLine);
             case '!':
                 this.advance();
                 if (this.currentChar === '=') {
+                    value += this.currentChar;
                     this.advance();
-                    return new Token(TokenType.NE, "!=", startLine);
+                    return new Token(TokenType.NE, value, startLine);
                 }
                 return new Token(TokenType.NOT, "!", startLine);
             case '&':
                 this.advance();
                 if (this.currentChar === '&') {
+                    value += this.currentChar;
                     this.advance();
-                    return new Token(TokenType.AND, "&&", startLine);
+                    return new Token(TokenType.AND, value, startLine);
                 }
-                return new Token(TokenType.UNKNOWN, "&", startLine);
+                return new Token(TokenType.UNKNOWN, value, startLine);
             case '|':
                 this.advance();
                 if (this.currentChar === '|') {
+                    value += this.currentChar;
                     this.advance();
-                    return new Token(TokenType.OR, "||", startLine);
+                    return new Token(TokenType.OR, value, startLine);
                 }
-                return new Token(TokenType.UNKNOWN, "|", startLine);
+                return new Token(TokenType.UNKNOWN, value, startLine);
             case '(':
                 this.advance();
                 return new Token(TokenType.LPA, "(", startLine);
@@ -316,20 +299,19 @@ class Scanner {
             case ';':
                 this.advance();
                 return new Token(TokenType.SCO, ";", startLine);
+            default:
+                break;
         }
-        return new Token(TokenType.UNKNOWN, "", startLine);
+        return new Token(TokenType.UNKNOWN, value, startLine);
+    }
+
+    isFullWidthSemicolon() {
+        return this.currentChar.charCodeAt(0) === 0xEF &&
+            this.peek().charCodeAt(0) === 0xBC &&
+            this.peekSecond().charCodeAt(0) === 0x9B;
     }
 
     getNextToken() {
-        const token = this._scanNextToken();
-        // 记录非空 token 以便提供上下文
-        if (token && token.type !== TokenType.END_OF_FILE) {
-            this.lastToken = token;
-        }
-        return token;
-    }
-
-    _scanNextToken() {
         while (this.currentChar !== '\0') {
             if (/\s/.test(this.currentChar)) {
                 this.skipWhitespace();
@@ -344,51 +326,41 @@ class Scanner {
                 }
             }
 
+            if (this.isFullWidthSemicolon()) {
+                const startLine = this.currentLine;
+                this.advance();
+                this.advance();
+                this.advance();
+                return new Token(TokenType.UNKNOWN, "；", startLine);
+            }
+
             if (this.currentChar === '"') {
                 return this.scanString();
             }
 
-            if (/[a-zA-Z_]/.test(this.currentChar)) {
+            if (this.isIdentifierStart(this.currentChar)) {
                 return this.scanIdOrKeyword();
             }
 
-            if (/\d/.test(this.currentChar) || 
-               ((this.currentChar === '+' || this.currentChar === '-') && /\d/.test(this.peek()))) {
-                
-                let isOperator = false;
-                // 判断正负号是否作为二元运算符存在 (通过前文上下文判断)
-                if (this.currentChar === '+' || this.currentChar === '-') {
-                    if (this.lastToken) {
-                        const t = this.lastToken.type;
-                        // 如果前一个 token 是标识符、数字、右括号或右方括号，说明当前应当是二元运算符 (+ 或 -)
-                        if (t === TokenType.ID || t === TokenType.INT || t === TokenType.FLO || 
-                            t === TokenType.RPA || t === TokenType.RBK) {
-                            isOperator = true;
-                        }
-                    }
-                }
-                
-                if (!isOperator) {
-                    let numToken = this.scanNumber();
-                    if (numToken) return numToken;
-                }
+            if (/\d/.test(this.currentChar)) {
+                return this.scanNumber();
             }
 
             let opToken = this.scanOperator();
-            if (opToken.type !== TokenType.UNKNOWN && opToken.value !== "") {
+            if (opToken.type !== TokenType.UNKNOWN) {
                 return opToken;
             }
 
+            let startLine = this.currentLine;
             let unknown = this.currentChar;
             this.advance();
-            return new Token(TokenType.UNKNOWN, unknown, this.currentLine);
+            return new Token(TokenType.UNKNOWN, unknown, startLine);
         }
         return new Token(TokenType.END_OF_FILE, "", this.currentLine);
     }
 
     getAllTokens() {
         let tokens = [];
-        this.lastToken = null; // 重置上下文
         let token = this.getNextToken();
         while (token.type !== TokenType.END_OF_FILE) {
             tokens.push(token);

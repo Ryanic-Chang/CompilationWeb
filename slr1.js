@@ -118,16 +118,17 @@ class SLR1ParserGenerator {
     }
 
     collectSymbols() {
+        this.terminals.clear();
+        this.nonTerminals.clear();
+
         for (let prod of this.productions) {
             this.nonTerminals.add(prod.lhs);
+        }
+
+        for (let prod of this.productions) {
             for (let sym of prod.rhs) {
                 if (sym === 'ε') continue;
-                
-                // 判断是否为非终结符: 首字母大写或者包含'
-                let isNonTerminal = /^[A-Z]/.test(sym) || sym.includes("'");
-                if (isNonTerminal) {
-                    this.nonTerminals.add(sym);
-                } else {
+                if (!this.nonTerminals.has(sym)) {
                     this.terminals.add(sym);
                 }
             }
