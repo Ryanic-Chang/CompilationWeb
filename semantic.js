@@ -32,20 +32,12 @@ Term -> Term MUL Fact | Term DIV Fact | Fact
 Fact -> ID | ID LBRACK Expr RBRACK | ID LBRACK RBRACK | ID LPAR ArgList RPAR | INT_NUM | FLOAT_NUM | LPAR Expr RPAR | SUB Fact | ADD Fact | NOT Fact
 ArgList -> ArgList COMMA Expr | ArgList COMMA | Expr | ε`;
 
-const DEFAULT_SEMANTIC_SOURCE = `int sum(int a, int b) {
-    int c;
-    c = a + b;
-    return c;
-}
-
-int main() {
-    int x = 1;
-    int y = 2;
-    int z;
-    z = sum(x, y);
-    print("result", z);
-    return z;
-}`;
+const DEFAULT_SEMANTIC_SOURCE = `int main() {
+    int x;
+    x = 5;  
+    return 0
+    };
+main()`;
 
 class SemanticASTNode {
     constructor(type, value = "") {
