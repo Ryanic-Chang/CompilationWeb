@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="编译原理实验平台总览页，展示实验概况、整体进度、关键数据看板与实验模块导航。">
+    <meta property="og:title" content="编译原理实验平台 | 实验总览">
+    <meta property="og:description" content="查看实验平台全局信息、进度统计和实验模块入口。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ryanic-chang.github.io/CompilationWeb/overview.html">
+    <link rel="icon" href="./logo.svg" type="image/svg+xml">
+    <title>实验总览 | 编译原理实验平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260520-2">
+</head>
+<body class="overview-page text-slate-800 font-sans min-h-screen">
+    <div class="overview-bg-orb overview-bg-orb-a"></div>
+    <div class="overview-bg-orb overview-bg-orb-b"></div>
+    <div class="overview-grid-mask"></div>
+
+    <div class="overview-shell max-w-7xl mx-auto px-5 md:px-6 py-6 md:py-8 relative z-10">
+        <header class="overview-hero">
+            <div class="overview-hero-panel">
+                <div class="overview-badge-row">
+                    <span class="overview-flag">
+                        <i class="fa-solid fa-compass"></i>
+                        独立总览页
+                    </span>
+                    <span class="overview-flag overview-flag-soft">
+                        <i class="fa-solid fa-layer-group"></i>
+                        两级页面结构
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                    <div class="xl:col-span-12">
+                        <h1 class="overview-hero-title">编译原理实验平台总览</h1>
+
+                        <div class="flex flex-wrap gap-3 mt-6">
+                            <a href="index.html" target="_blank" rel="noopener noreferrer" class="overview-primary-btn">
+                                <i class="fa-solid fa-flask"></i>
+                                进入实验页
+                            </a>
+                            <a href="index.html?exp=backend" target="_blank" rel="noopener noreferrer" class="overview-secondary-btn">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                                前往最新目标代码模块
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="overview-spotlight-grid">
+            <article class="overview-panel overview-panel-glow">
+                <div class="overview-panel-kicker">Platform Snapshot</div>
+                <h2 class="overview-panel-title">实验基本信息</h2>
+                <p class="overview-panel-desc">把平台结构、页面角色与使用方式整理为统一入口，降低首次进入时的理解成本。</p>
+                        <div class="grid grid-cols-1 mt-5 text-sm text-slate-600">
+                    <div class="overview-info-card">
+                        <div class="overview-info-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="font-semibold text-slate-800 mb-2">平台构成</div>
+                        <ul class="space-y-2">
+                            <li>共 8 个实验模块，覆盖自动机、词法、语法、语义、中间代码与目标代码。</li>
+                            <li>实验七与实验八共享同一执行页面，但在总览中完整展示为两个节点。</li>
+                            <li>总览页不承载输入与运行逻辑，避免与实验页职责混叠。</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <article class="overview-panel">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <div class="overview-panel-kicker">Live Dashboard</div>
+                        <h2 class="overview-panel-title">整体进度统计</h2>
+                        <p class="overview-panel-desc">通过实验页写回的本地状态实时更新当前进度，可随时手动清零。</p>
+                    </div>
+                    <button id="btn-overview-reset" type="button" class="overview-reset-btn">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        清零统计
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+                    <div class="overview-stat-card">
+                        <div class="overview-stat-label">实验总数</div>
+                        <div id="overview-stat-total" class="overview-stat-value">8</div>
+                    </div>
+                    <div class="overview-stat-card">
+                        <div class="overview-stat-label">已完成</div>
+                        <div id="overview-stat-completed" class="overview-stat-value text-emerald-500">0</div>
+                    </div>
+                    <div class="overview-stat-card">
+                        <div class="overview-stat-label">执行中</div>
+                        <div id="overview-stat-running" class="overview-stat-value text-indigo-500">0</div>
+                    </div>
+                    <div class="overview-stat-card">
+                        <div class="overview-stat-label">完成率</div>
+                        <div id="overview-stat-rate" class="overview-stat-value">0%</div>
+                    </div>
+                </div>
+
+                <div class="overview-progress-rail">
+                    <div class="overview-progress-labels">
+                        <span>平台进度</span>
+                        <span id="overview-progress-caption">等待实验状态加载</span>
+                    </div>
+                    <div class="overview-progress-bar-shell">
+                        <div id="overview-progress-bar" class="overview-progress-bar"></div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="space-y-6 mt-6">
+            <div class="space-y-6">
+                <article class="overview-panel overview-pipeline-panel">
+                    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+                        <div>
+                            <div class="overview-panel-kicker">Compiler Storyline</div>
+                            <h2 class="overview-panel-title">完整流程流水线</h2>
+                        </div>
+                        <div class="overview-legend">
+                            <span><i class="fa-solid fa-circle text-slate-300"></i> 未执行</span>
+                            <span><i class="fa-solid fa-circle text-indigo-500"></i> 执行中</span>
+                            <span><i class="fa-solid fa-circle text-emerald-500"></i> 已完成</span>
+                            <span><i class="fa-solid fa-circle text-rose-400"></i> 待修正</span>
+                        </div>
+                    </div>
+
+                    <div class="overview-pipeline-static">
+                        <div class="overview-flow-line"></div>
+                        <div class="pipeline-nodes overview-pipeline-grid">
+                                <div class="pipeline-node overview-node" data-stage-id="dfa" data-state-key="dfa" data-exp-key="dfa">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-project-diagram text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">01</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="dfa">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验一：DFA 模拟</h4>
+                                        <p class="overview-node-desc">定义自动机、验证字符串并观察状态转移图，是整个编译实验的形式语言基础。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="scanner" data-state-key="scanner" data-exp-key="scanner">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">02</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="scanner">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验二：词法分析</h4>
+                                        <p class="overview-node-desc">将源程序拆分为 Token 流，为语法分析器提供结构化输入。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="lr0" data-state-key="lr0" data-exp-key="lr0">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-code-branch text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">03</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="lr0">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验三：LR(0)</h4>
+                                        <p class="overview-node-desc">构建项目集规范族与关系图，理解状态迁移和归约条件。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="slr1" data-state-key="slr1" data-exp-key="slr1">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-network-wired text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">04</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="slr1">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验四：SLR(1)</h4>
+                                        <p class="overview-node-desc">通过 FIRST/FOLLOW 与 ACTION/GOTO 表，建立完整语法分析执行机制。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="semantic" data-state-key="semantic" data-exp-key="semantic">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-sitemap text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">05</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="semantic">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验五：语义分析</h4>
+                                        <p class="overview-node-desc">生成符号表、检查语义问题并绘制 AST，将结构提升为语义层表示。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="ir" data-state-key="ir" data-exp-key="ir">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-code text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">06</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="ir">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验六：中间代码</h4>
+                                        <p class="overview-node-desc">输出三地址码与四元式，为后端优化与目标代码生成建立桥梁。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="backend-memory" data-state-key="backend" data-exp-key="backend">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-memory text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">07</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="backend-memory">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验七：地址映射</h4>
+                                        <p class="overview-node-desc">在中间表示上生成函数栈帧与变量地址布局，明确运行时存储结构。</p>
+                                    </div>
+                                </div>
+
+                                <div class="pipeline-node overview-node" data-stage-id="backend-target" data-state-key="backend" data-exp-key="backend">
+                                    <button type="button" class="pipeline-dot overview-pipeline-dot text-indigo-600">
+                                        <i class="fa-solid fa-microchip text-lg"></i>
+                                    </button>
+                                    <div class="pipeline-node-card overview-pipeline-card cursor-pointer">
+                                        <div class="overview-node-top">
+                                            <span class="overview-node-index">08</span>
+                                            <span class="pipeline-status-badge bg-slate-100 text-slate-600" data-status-badge="backend-target">未执行</span>
+                                        </div>
+                                        <h4 class="overview-node-title">实验八：目标代码</h4>
+                                        <p class="overview-node-desc">生成 x86 / arm64 汇编与运行时文件，完成从前端到后端的全链路闭环。</p>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </article>
+
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                    <article class="overview-panel xl:col-span-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                            <div>
+                                <div class="overview-panel-kicker">Status Overview</div>
+                                <h2 class="overview-panel-title">实验进度总览</h2>
+                            </div>
+                            <div class="overview-mini-card">
+                                <span>二级页面</span>
+                                <strong>index.html</strong>
+                            </div>
+                        </div>
+                        <div id="overview-progress-list" class="space-y-3">
+                            <div class="text-sm text-slate-400">等待实验状态加载...</div>
+                        </div>
+                    </article>
+
+                    <article class="overview-panel xl:col-span-6">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <div>
+                                <div class="overview-panel-kicker">Module Entry</div>
+                                <h2 class="overview-panel-title">关联实验列表导航</h2>
+                            </div>
+                            <span class="overview-inline-tag">快速进入</span>
+                        </div>
+
+                        <div class="space-y-3">
+                        <a href="index.html?exp=dfa" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-project-diagram"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验一：DFA 模拟</div>
+                                <div class="text-sm text-slate-500 mt-1">自动机定义、字符串验证与状态转移图。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        <a href="index.html?exp=scanner" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验二：词法分析</div>
+                                <div class="text-sm text-slate-500 mt-1">生成 Token 流并查看词法 DFA。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        <a href="index.html?exp=lr0" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-code-branch"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验三：LR(0) 分析</div>
+                                <div class="text-sm text-slate-500 mt-1">构建项目集规范族与转移图。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        <a href="index.html?exp=slr1" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-network-wired"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验四：SLR(1) 分析</div>
+                                <div class="text-sm text-slate-500 mt-1">FIRST/FOLLOW 与 ACTION/GOTO 构表。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        <a href="index.html?exp=semantic" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-sitemap"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验五：语义分析</div>
+                                <div class="text-sm text-slate-500 mt-1">符号表、语义错误检查与 AST。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        <a href="index.html?exp=ir" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-code"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验六：中间代码</div>
+                                <div class="text-sm text-slate-500 mt-1">三地址码、四元式与 AST 结果展示。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        <a href="index.html?exp=backend" target="_blank" rel="noopener noreferrer" class="overview-nav-card">
+                            <div class="overview-nav-icon"><i class="fa-solid fa-microchip"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-slate-800">实验七&八：目标代码</div>
+                                <div class="text-sm text-slate-500 mt-1">地址映射、x86/arm64 汇编与运行时文件。</div>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        </a>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="overview.js?v=20260520-2"></script>
+</body>
+</html>

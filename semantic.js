@@ -727,21 +727,21 @@ function semanticEscapeHtml(text) {
 
 function buildSemanticReport(tokens, symbols, errors, astText) {
     const lines = [];
-    lines.push("=== Token 流 ===");
+    lines.push("Token 流:");
     for (const token of tokens) {
         lines.push(`(${token.type}, ${token.value}, ${token.line})`);
     }
     lines.push("");
-    lines.push("=== 符号表 ===");
+    lines.push("符号表:");
     for (const symbol of symbols) {
         lines.push(`${symbol.name}\t${symbol.type}\tLevel ${symbol.scope_level}`);
     }
     lines.push("");
-    lines.push("=== 语义错误 ===");
+    lines.push("语义错误:");
     if (errors.length === 0) lines.push("无");
     else lines.push(...errors);
     lines.push("");
-    lines.push("=== AST ===");
+    lines.push("AST:");
     lines.push(astText || "无");
     return lines.join("\n");
 }
@@ -964,13 +964,27 @@ if (typeof document !== "undefined") {
 
             if (!grammarText) {
                 showSemanticStatus("请提供语义分析文法（mainGGG.txt）。", "error");
+                window.experimentFlow?.setExperimentState?.("semantic", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 return;
             }
             if (!sourceText) {
                 showSemanticStatus("请提供待分析的源代码。", "error");
+                window.experimentFlow?.setExperimentState?.("semantic", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 return;
             }
 
+            window.experimentFlow?.setExperimentState?.("semantic", {
+                running: true,
+                lastRunStatus: "running"
+            });
             try {
                 const { productions, startSymbol } = parseSemanticGrammar(grammarText);
                 if (productions.length === 0) {
@@ -1006,8 +1020,18 @@ if (typeof document !== "undefined") {
 
                 if (result.semanticErrors.length > 0) {
                     showSemanticStatus(`分析完成，但发现 ${result.semanticErrors.length} 条语义问题。`, "error");
+                    window.experimentFlow?.setExperimentState?.("semantic", {
+                        completed: true,
+                        running: false,
+                        lastRunStatus: "error"
+                    });
                 } else {
                     showSemanticStatus("分析完成，已生成符号表、语义检查结果和 AST。", "success");
+                    window.experimentFlow?.setExperimentState?.("semantic", {
+                        completed: true,
+                        running: false,
+                        lastRunStatus: "success"
+                    });
                 }
             } catch (error) {
                 renderSemanticTokens([]);
@@ -1016,6 +1040,11 @@ if (typeof document !== "undefined") {
                 renderSemanticAstText(null);
                 drawSemanticAst(null);
                 showSemanticStatus(error.message, "error");
+                window.experimentFlow?.setExperimentState?.("semantic", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 console.error(error);
             }
         });

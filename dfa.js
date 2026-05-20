@@ -163,15 +163,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = `Alphabet: ${inputAlphabet.value}\nStates: ${inputStates.value}\nStart: ${inputStart.value}\nAccept: ${inputAccept.value}\nTransitions:\n${inputTransitions.value}`;
         if (!inputAlphabet.value.trim() || !inputStates.value.trim()) {
             showStatus("请完善DFA定义信息", "error");
+            window.experimentFlow?.setExperimentState?.("dfa", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
             return;
         }
 
+        window.experimentFlow?.setExperimentState?.("dfa", {
+            running: true,
+            lastRunStatus: "running"
+        });
         currentDFA = new DFA();
         currentDFA.parse(text);
         
         const validation = currentDFA.isValid();
         if (validation.valid) {
             showStatus(validation.msg, "success");
+            window.experimentFlow?.setExperimentState?.("dfa", {
+                completed: true,
+                running: false,
+                lastRunStatus: "success"
+            });
             testSection.classList.remove('opacity-50', 'pointer-events-none');
             drawNetwork(currentDFA);
             // 清理之前的测试结果
@@ -179,6 +193,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('test-str-result').classList.add('hidden');
         } else {
             showStatus(validation.msg, "error");
+            window.experimentFlow?.setExperimentState?.("dfa", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
             testSection.classList.add('opacity-50', 'pointer-events-none');
             clearNetwork();
         }

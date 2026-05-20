@@ -94,7 +94,15 @@ function normalizeNumberLiteral(value) {
 }
 
 function buildBackendIrReport(tacText, quadText, optimizedText) {
-    return [tacText, "", quadText, "", optimizedText].join("\n");
+    return [
+        "三地址码:",
+        tacText || "无",
+        "",
+        "四元式:",
+        quadText || "无",
+        "",
+        optimizedText || "无"
+    ].join("\n");
 }
 
 function buildRuntimeArtifact(baseName, runtimeSource) {
@@ -208,7 +216,7 @@ class BackendSimpleOptimizer {
     }
 
     formatOptimizedQuadruples(quads) {
-        const lines = ["=== 6. 实验8优化后四元式 (Optimized Quadruples) ==="];
+        const lines = ["优化后四元式:"];
         for (const quad of quads) {
             lines.push(`(${quad.op}, ${quad.arg1 || "-"}, ${quad.arg2 || "-"}, ${quad.result || "-"})`);
         }
@@ -239,7 +247,7 @@ class BackendMemoryLayout {
     }
 
     format() {
-        const lines = ["=== 7. 实验七：内存地址映射 (Memory Layout) ===", "[全局区]"];
+        const lines = ["全局区:"];
         if (this.globals.length === 0) {
             lines.push("  (无全局变量)");
         } else {
@@ -254,7 +262,7 @@ class BackendMemoryLayout {
             const frame = this.frames[funcName];
             if (!frame) continue;
             lines.push("");
-            lines.push(`[函数帧] ${frame.name}  stack_size=${frame.stack_size} bytes`);
+            lines.push(`函数帧 ${frame.name}  stack_size=${frame.stack_size} bytes`);
             this.appendEntries(lines, "参数区", frame.params);
             this.appendEntries(lines, "局部变量区", frame.locals);
             this.appendEntries(lines, "临时变量区", frame.temps);
@@ -1179,13 +1187,27 @@ if (typeof document !== "undefined") {
 
             if (!grammarText) {
                 showBackendStatus("请提供 mainGGG 文法。", "error");
+                window.experimentFlow?.setExperimentState?.("backend", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 return;
             }
             if (!sourceText) {
                 showBackendStatus("请提供待分析源代码。", "error");
+                window.experimentFlow?.setExperimentState?.("backend", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 return;
             }
 
+            window.experimentFlow?.setExperimentState?.("backend", {
+                running: true,
+                lastRunStatus: "running"
+            });
             try {
                 if (!runtimeSource) {
                     runtimeSource = await loadDefaultRuntimeSource();
@@ -1255,13 +1277,28 @@ if (typeof document !== "undefined") {
 
                 if (result.semanticErrors.length > 0) {
                     showBackendStatus(`实验七&八已生成结果，但检测到 ${result.semanticErrors.length} 条语义问题。`, "error");
+                    window.experimentFlow?.setExperimentState?.("backend", {
+                        completed: true,
+                        running: false,
+                        lastRunStatus: "error"
+                    });
                 } else {
                     showBackendStatus("实验七&八运行成功，已生成中间代码、内存地址映射、x86/arm64 汇编与 runtime 文件。", "success");
+                    window.experimentFlow?.setExperimentState?.("backend", {
+                        completed: true,
+                        running: false,
+                        lastRunStatus: "success"
+                    });
                 }
             } catch (error) {
                 resetOutputs();
                 document.getElementById("backend-ir-output").textContent = error.message;
                 showBackendStatus(error.message, "error");
+                window.experimentFlow?.setExperimentState?.("backend", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 console.error(error);
             }
         });

@@ -20,7 +20,7 @@
     <!-- 引入 vis-network 库，用于绘制 DFA 图形 -->
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260520-1">
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
     <!-- 侧边栏 (多级网页导航) -->
@@ -30,6 +30,9 @@
                 编译原理
             </h1>
             <p class="text-sm text-slate-500 mt-1">实验演示平台</p>
+            <a href="overview.html" class="mt-4 inline-flex items-center gap-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-2 rounded-lg transition-colors">
+                <i class="fa-solid fa-house"></i> 返回实验总览页
+            </a>
         </div>
         <nav class="flex-1 p-4 overflow-y-auto space-y-2">
             <!-- 实验一：DFA -->
@@ -60,7 +63,22 @@
 
     <!-- 主内容区 -->
     <main class="flex-1 h-full overflow-y-auto bg-slate-50 p-8 relative">
-        
+
+        <div id="page-route-bar" class="hidden mb-6 bg-white/95 backdrop-blur border border-slate-200 rounded-xl shadow-sm px-4 py-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <div class="text-xs text-slate-500 mb-1">实验导航</div>
+                    <div class="font-semibold text-slate-800" id="route-current-title">当前页面</div>
+                    <div class="text-sm text-slate-500" id="route-current-desc">返回总览可查看全局统计与实验入口。</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-route-back-overview" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                        返回实验总览
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- DFA 实验内容 -->
         <section id="experiment-dfa" class="page-section active max-w-7xl mx-auto">
             <header class="mb-8">
@@ -781,13 +799,13 @@
 
     </main>
 
-    <script src="app.js"></script>
-    <script src="dfa.js"></script>
-    <script src="scanner.js?v=20260519-1"></script>
-    <script src="lr0.js"></script>
-    <script src="slr1.js?v=20260519-1"></script>
-    <script src="semantic.js?v=20260519-2"></script>
-    <script src="exp6.js?v=20260519-2"></script>
-    <script src="exp78.js?v=20260519-1"></script>
+    <script src="app.js?v=20260520-1"></script>
+    <script src="dfa.js?v=20260520-1"></script>
+    <script src="scanner.js?v=20260520-2"></script>
+    <script src="lr0.js?v=20260520-1"></script>
+    <script src="slr1.js?v=20260520-2"></script>
+    <script src="semantic.js?v=20260520-3"></script>
+    <script src="exp6.js?v=20260520-1"></script>
+    <script src="exp78.js?v=20260520-2"></script>
 </body>
 </html>

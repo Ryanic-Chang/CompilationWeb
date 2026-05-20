@@ -194,26 +194,26 @@ class LR0ParserGenerator {
     }
 
     generateTextOutput() {
-        let out = "LR(0)项目集规范族:\n\n";
+        let out = "";
         
         for (let itemSet of this.itemSets) {
             out += `I${itemSet.id}:\n`;
             
-            out += "Kernel:\n";
+            out += "内核项:\n";
             for (let item of itemSet.items) {
                 if (this.isKernelItem(item)) {
                     out += `  ${item.toString()}\n`;
                 }
             }
             
-            out += "Closure:\n";
+            out += "闭包项:\n";
             for (let item of itemSet.items) {
                 if (!this.isKernelItem(item)) {
                     out += `  ${item.toString()}\n`;
                 }
             }
             
-            out += "Goto:\n";
+            out += "转移:\n";
             let hasGoto = false;
             for (let [key, nextId] of this.gotoTable.entries()) {
                 let parts = key.split('_');
@@ -224,17 +224,12 @@ class LR0ParserGenerator {
                     hasGoto = true;
                 }
             }
-            if (!hasGoto) out += "  (无)\n";
+            if (!hasGoto) out += "  无\n";
             
             out += "\n";
         }
 
-        if (this.isLR0) {
-            out += "【检测结果】该文法是 LR(0) 文法，无冲突。\n";
-        } else {
-            out += "【检测结果】警告：该文法不是 LR(0) 文法，存在冲突。\n";
-        }
-        return out;
+        return out.trim();
     }
 }
 
@@ -341,9 +336,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = inputGrammar.value;
         if (!text.trim()) {
             showLR0Status("请输入文法规则", "error");
+            window.experimentFlow?.setExperimentState?.("lr0", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
             return;
         }
 
+        window.experimentFlow?.setExperimentState?.("lr0", {
+            running: true,
+            lastRunStatus: "running"
+        });
         try {
             const { productions, startSymbol } = parseGrammar(text);
             if (productions.length === 0) {
@@ -362,8 +366,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (generator.isLR0) {
                 showLR0Status(`构建完成！共生成 ${generator.itemSets.length} 个项目集，无冲突。是 LR(0) 文法。`, "success");
+                window.experimentFlow?.setExperimentState?.("lr0", {
+                    completed: true,
+                    running: false,
+                    lastRunStatus: "success"
+                });
             } else {
                 showLR0Status(`注意：存在移进/归约或归约/归约冲突，非 LR(0) 文法！(共生成 ${generator.itemSets.length} 个项目集，已绘制转移图)`, "error");
+                window.experimentFlow?.setExperimentState?.("lr0", {
+                    completed: true,
+                    running: false,
+                    lastRunStatus: "error"
+                });
             }
 
             btnDownload.classList.remove('opacity-50', 'pointer-events-none');
@@ -371,6 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (e) {
             showLR0Status(e.message, "error");
+            window.experimentFlow?.setExperimentState?.("lr0", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
         }
     });
 });

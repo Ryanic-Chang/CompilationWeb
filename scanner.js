@@ -450,9 +450,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const code = inputCode.value;
         if (!code.trim()) {
             showScannerStatus("请输入要分析的源代码", "error");
+            window.experimentFlow?.setExperimentState?.("scanner", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
             return;
         }
 
+        window.experimentFlow?.setExperimentState?.("scanner", {
+            running: true,
+            lastRunStatus: "running"
+        });
         try {
             const scanner = new Scanner(code);
             currentTokens = scanner.getAllTokens();
@@ -481,11 +490,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             showScannerStatus(`分析成功！共生成 ${currentTokens.length} 个 Token。`, "success");
+            window.experimentFlow?.setExperimentState?.("scanner", {
+                completed: true,
+                running: false,
+                lastRunStatus: "success"
+            });
             btnDownload.classList.remove('opacity-50', 'pointer-events-none');
             btnDownload.removeAttribute('disabled');
 
         } catch (e) {
             showScannerStatus(e.message, "error");
+            window.experimentFlow?.setExperimentState?.("scanner", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
         }
     });
 

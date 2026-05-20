@@ -19,6 +19,7 @@
 - **现代化 UI**: 基于 HTML5 + Tailwind CSS (CDN) 构建，界面明亮、结构清晰的响应式设计。
 - **纯前端架构**: 无需复杂的后端或 Node.js 构建工具，纯浏览器原生运行，克隆即用。
 - **动态可视化**: 借助 `vis-network` 图形库，将晦涩难懂的状态转移、SLR 规范族、语法树等数据结构转化为直观的动态交互图。
+- **两级页面结构**: 新增独立的 `overview.html` 作为实验总览页，用于展示全局概况、进度统计、完整流水线与实验入口；`index.html` 作为二级实验页承载各实验的输入、执行与结果展示。
 - **中间代码输出**: 支持基于 AST 自动生成三地址码与四元式，便于展示编译前端到中间表示的完整流程。
 - **目标代码生成**: 新增实验七&八，可继续生成优化后四元式、内存地址映射以及可下载的 `x86` / `arm64` 汇编文件。
 - **运行时配套**: 页面内置并可下载 `runtime.c`，同时给出建议编译命令，减少手动拼接汇编与运行时文件的麻烦。
@@ -33,16 +34,25 @@
    ```bash
    git clone https://github.com/your-username/compilation-web.git
    ```
-2. 直接使用任何现代浏览器（Chrome、Edge 等）打开目录下的 `index.html` 文件即可。
+2. 推荐优先打开 `overview.html` 进入独立实验总览页；也可以直接打开 `index.html` 进入二级实验页。
 3. （可选）如果您需要使用 VS Code 进行二次开发，推荐安装 `Live Server` 插件，并在项目根目录启动服务，以获得更佳的热更新体验。
+
+### 页面入口
+
+- 总览页：`overview.html`
+- 实验页：`index.html`
+- 在线访问实验页主页：[https://ryanic-chang.github.io/CompilationWeb/](https://ryanic-chang.github.io/CompilationWeb/)
+- 在线访问总览页：[https://ryanic-chang.github.io/CompilationWeb/overview.html](https://ryanic-chang.github.io/CompilationWeb/overview.html)
 
 ## 📂 项目结构
 
 ```text
 CompilationWeb/
-├── index.html      # 主页面：包含侧边栏导航和所有实验模块的 DOM 结构
+├── overview.html   # 独立实验总览页：展示全局概况、进度统计、完整流水线与实验入口
+├── index.html      # 二级实验页：包含侧边栏导航和所有实验模块的 DOM 结构
 ├── style.css       # 样式文件：页面切换动画与定制 UI 细节
 ├── app.js          # 核心交互：控制多级网页的切换与通用 UI 逻辑
+├── overview.js     # 总览页逻辑：实验状态读取、统计更新、节点状态同步与跳转逻辑
 ├── dfa.js          # 实验一模块：DFA 核心类（解析、校验、生成字符串）及专属 UI 事件
 ├── scanner.js      # 实验二模块：词法分析器 (Scanner) 引擎、DFA 图表及表格渲染逻辑
 ├── lr0.js          # 实验三模块：LR(0) 语法分析核心引擎（闭包、GoTo、冲突检测）及 UI 事件
@@ -121,6 +131,13 @@ CompilationWeb/
 gcc -m32 test_x86.s test_runtime.c -o test_x86
 aarch64-linux-gnu-gcc test_arm64.s test_runtime.c -o test_arm64
 ```
+
+## 🗺️ 页面规划
+
+- `overview.html` 为一级页面，只负责信息总览、整体进度、完整流程节点和实验入口，不承载实验输入与运行逻辑。
+- `index.html` 为二级页面，保留实验一到实验八的输入区、执行按钮、图形展示和结果面板。
+- 从总览页进入实验页时，会以新标签页打开对应实验模块，方便保留总览页作为导航主页。
+- 实验页顶部提供返回总览页入口，便于在总览与实验之间来回切换。
 
 ## 🤖 AI 辅助开发指南 (Skill)
 

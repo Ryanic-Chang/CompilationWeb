@@ -268,7 +268,7 @@ class IntermediateCodeGenerator {
     }
 
     formatThreeAddressCode() {
-        const lines = ["=== 三地址码 (Three-Address Code) ==="];
+        const lines = [];
         for (const q of this.quads) {
             if (q.op === "label") lines.push(`LABEL ${q.result}:`);
             else if (q.op === "func") lines.push(`FUNC ${q.result}:`);
@@ -293,7 +293,7 @@ class IntermediateCodeGenerator {
     }
 
     formatQuadruples() {
-        const lines = ["=== 四元式 (Quadruples) ==="];
+        const lines = [];
         const dash = value => value ? value : "-";
 
         for (const q of this.quads) {
@@ -348,15 +348,17 @@ function showIrStatus(message, type) {
 
 function buildIrReport(astText, errors, tacText, quadText) {
     const lines = [];
-    lines.push("=== AST ===");
+    lines.push("AST:");
     lines.push(astText || "无");
     lines.push("");
-    lines.push("=== 语义错误报告 ===");
+    lines.push("语义错误报告:");
     if (errors.length === 0) lines.push("无");
     else lines.push(...errors);
     lines.push("");
+    lines.push("三地址码:");
     lines.push(tacText);
     lines.push("");
+    lines.push("四元式:");
     lines.push(quadText);
     return lines.join("\n");
 }
@@ -512,13 +514,27 @@ if (typeof document !== "undefined") {
 
             if (!grammarText) {
                 showIrStatus("请提供 mainGGG 文法。", "error");
+                window.experimentFlow?.setExperimentState?.("ir", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 return;
             }
             if (!sourceText) {
                 showIrStatus("请提供待分析源代码。", "error");
+                window.experimentFlow?.setExperimentState?.("ir", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 return;
             }
 
+            window.experimentFlow?.setExperimentState?.("ir", {
+                running: true,
+                lastRunStatus: "running"
+            });
             try {
                 const { productions, startSymbol } = parseSemanticGrammar(grammarText);
                 if (productions.length === 0) {
@@ -558,8 +574,18 @@ if (typeof document !== "undefined") {
 
                 if (result.semanticErrors.length > 0) {
                     showIrStatus(`中间代码已生成，但检测到 ${result.semanticErrors.length} 条语义问题。`, "error");
+                    window.experimentFlow?.setExperimentState?.("ir", {
+                        completed: true,
+                        running: false,
+                        lastRunStatus: "error"
+                    });
                 } else {
                     showIrStatus("实验六运行成功，已生成 AST、语义错误报告、三地址码和四元式。", "success");
+                    window.experimentFlow?.setExperimentState?.("ir", {
+                        completed: true,
+                        running: false,
+                        lastRunStatus: "success"
+                    });
                 }
             } catch (error) {
                 drawIrAst(null);
@@ -567,6 +593,11 @@ if (typeof document !== "undefined") {
                 document.getElementById("ir-quad-output").textContent = "未生成四元式。";
                 renderIrErrors([error.message]);
                 showIrStatus(error.message, "error");
+                window.experimentFlow?.setExperimentState?.("ir", {
+                    completed: false,
+                    running: false,
+                    lastRunStatus: "error"
+                });
                 console.error(error);
             }
         });

@@ -416,17 +416,17 @@ class SLR1ParserGenerator {
     }
 
     generateTextOutput() {
-        let out = "=== FIRST 集 ===\n";
+        let out = "FIRST 集:\n";
         for (let nt of Array.from(this.nonTerminals).sort()) {
             out += `FIRST(${nt}) = { ${Array.from(this.firstSets.get(nt)).sort().join(', ')} }\n`;
         }
         
-        out += "\n=== FOLLOW 集 ===\n";
+        out += "\nFOLLOW 集:\n";
         for (let nt of Array.from(this.nonTerminals).sort()) {
             out += `FOLLOW(${nt}) = { ${Array.from(this.followSets.get(nt)).sort().join(', ')} }\n`;
         }
 
-        out += "\n=== 项目集规范族 ===\n\n";
+        out += "\n项目集规范族:\n\n";
         for (let itemSet of this.itemSets) {
             out += `I${itemSet.id}:\n`;
             for (let item of itemSet.items) {
@@ -435,15 +435,13 @@ class SLR1ParserGenerator {
             out += "\n";
         }
 
-        if (this.isSLR1) {
-            out += "【检测结果】该文法是 SLR(1) 文法，无冲突。\n";
-        } else {
-            out += "【检测结果】警告：该文法不是 SLR(1) 文法，存在以下冲突：\n";
+        if (!this.isSLR1) {
+            out += "冲突信息:\n";
             for (let c of this.conflicts) {
                 out += `  - ${c}\n`;
             }
         }
-        return out;
+        return out.trim();
     }
 }
 
@@ -550,9 +548,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = inputGrammar.value;
         if (!text.trim()) {
             showSLR1Status("请输入文法规则", "error");
+            window.experimentFlow?.setExperimentState?.("slr1", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
             return;
         }
 
+        window.experimentFlow?.setExperimentState?.("slr1", {
+            running: true,
+            lastRunStatus: "running"
+        });
         try {
             const { productions, startSymbol } = parseSLR1Grammar(text);
             if (productions.length === 0) {
@@ -574,8 +581,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (generator.isSLR1) {
                 showSLR1Status(`构建完成！无冲突。是 SLR(1) 文法。`, "success");
+                window.experimentFlow?.setExperimentState?.("slr1", {
+                    completed: true,
+                    running: false,
+                    lastRunStatus: "success"
+                });
             } else {
                 showSLR1Status(`注意：存在移进/归约或归约/归约冲突，非 SLR(1) 文法！`, "error");
+                window.experimentFlow?.setExperimentState?.("slr1", {
+                    completed: true,
+                    running: false,
+                    lastRunStatus: "error"
+                });
             }
 
             btnDownload.classList.remove('opacity-50', 'pointer-events-none');
@@ -583,6 +600,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (e) {
             showSLR1Status(e.message, "error");
+            window.experimentFlow?.setExperimentState?.("slr1", {
+                completed: false,
+                running: false,
+                lastRunStatus: "error"
+            });
             console.error(e);
         }
     });
